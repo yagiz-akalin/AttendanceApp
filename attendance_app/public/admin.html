@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Öğrenci Paneli</title>
+</head>
+<body>
+  <h1>Öğrenci Ekle / Sil</h1>
+  <nav>
+    <a href="/">Ana Sayfa</a>
+    <a href="/query">Yoklama Sorgulama</a>
+    <a href="/admin">Öğrenci Paneli</a>
+  </nav>
+
+  <h3>Yeni Öğrenci Ekle</h3>
+  <form id="addForm">
+    <input name="student_no" placeholder="Öğrenci No" required>
+    <input name="first_name" placeholder="Ad" required>
+    <input name="last_name" placeholder="Soyad" required>
+    <input name="class_name" placeholder="Sınıf" required>
+    <button type="submit">Ekle</button>
+  </form>
+
+  <h3>Tüm Öğrenciler</h3>
+  <div id="studentList"></div>
+
+  <script>
+    async function fetchStudents() {
+      const res = await fetch("/all-students");
+      const data = await res.json();
+      document.getElementById("studentList").innerHTML = data.map(s =>
+        `<div>${s.student_no} - ${s.first_name} ${s.last_name} (${s.class_name}) 
+         <button onclick="deleteStudent(${s.id})">Sil</button></div>`
+      ).join("");
+    }
+
+    document.getElementById("addForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const payload = Object.fromEntries(new FormData(form).entries());
+      const res = await fetch("/student-add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
+      if (result.success) {
+        form.reset();
+        fetchStudents();
+      } else {
+        alert("Ekleme başarısız oldu");
+      }
+    });
+
+    async function deleteStudent(id) {
+      if (confirm("Bu öğrenciyi silmek istediğinize emin misiniz?")) {
+        const res = await fetch(`/student-delete?id=${id}`);
+        const result = await res.json();
+        if (result.success) fetchStudents();
+        else alert("Silme işlemi başarısız oldu");
+      }
+    }
+
+    fetchStudents();
+  </script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Devamsızlık Raporu</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f4; }
+    header { background: #007bff; color: white; padding: 20px; font-size: 20px; font-weight: bold; }
+    .container { padding: 30px; }
+    label { font-weight: bold; }
+    input { padding: 8px; margin-left: 10px; width: 100px; }
+    button {
+      padding: 8px 12px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      margin-left: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #aaa;
+      cursor: not-allowed;
+    }
+    table {
+      margin-top: 20px;
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+  <header>Toplu Devamsızlık Raporu</header>
+  <div class="container">
+    <label>Minimum Devamsızlık Sayısı:</label>
+    <input type="number" id="minAbsence" value="5" min="1" />
+    <button onclick="fetchReport()">Sorgula</button>
+    <button id="pdfButton" onclick="downloadPDF()" disabled>PDF İndir</button>
+
+    <table id="resultTable" style="display: none;">
+      <thead>
+        <tr>
+          <th>Öğrenci No</th>
+          <th>Ad Soyad</th>
+          <th>Toplam Devamsızlık</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    let currentMin = null;
+
+    async function fetchReport() {
+      const min = document.getElementById("minAbsence").value;
+      currentMin = min;
+
+      const res = await fetch(`/students-with-absences?min=${min}`);
+      const data = await res.json();
+      const table = document.getElementById("resultTable");
+      const tbody = table.querySelector("tbody");
+      const pdfBtn = document.getElementById("pdfButton");
+      tbody.innerHTML = "";
+
+      if (data.length > 0) {
+        data.forEach(student => {
+          const row = `<tr>
+            <td>${student.student_no}</td>
+            <td>${student.first_name} ${student.last_name}</td>
+            <td>${student.total_absences}</td>
+          </tr>`;
+          tbody.innerHTML += row;
+        });
+        table.style.display = "table";
+        pdfBtn.disabled = false;
+      } else {
+        table.style.display = "none";
+        pdfBtn.disabled = true;
+        alert("Bu eşikte devamsızlık yapan öğrenci bulunamadı.");
+      }
+    }
+
+    function downloadPDF() {
+      if (!currentMin) return;
+      window.open(`/students-with-absences-pdf?min=${currentMin}`, "_blank");
+    }
+  </script>
+</body>
+</html>

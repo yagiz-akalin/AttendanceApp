@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Yoklama Sistemi</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #f8f9fa;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      background: white;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+    .topbar .title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #1a1a1a;
+    }
+    .topbar .menu a {
+      margin-left: 25px;
+      text-decoration: none;
+      color: #007bff;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .topbar .menu a:hover {
+      text-decoration: underline;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin: 30px 40px;
+    }
+
+    .input-card {
+      background: white;
+      padding: 12px 50px;
+      border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      min-width: 280px;
+    }
+
+    .input-card label {
+      font-weight: bold;
+      color: #444;
+      display: flex;
+      flex-direction: row;        /* DEĞİŞTİRİLDİ: column → row */
+      align-items: center;        /* Dikeyde hizalama */
+      justify-content: center;
+      text-align: center;
+      gap: 10px;                   /* İkon ile yazı arası boşluk */
+      margin-bottom: 8px;
+    }
+
+
+    .input-card label i {
+      margin-bottom: 6px;
+      color: #666;
+    }
+
+    .input-card select,
+    .input-card input[type="date"] {
+      padding: 6px;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px 18px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      display: block;
+      margin: 30px auto;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+      cursor: pointer;
+    }
+
+    .student-list {
+      margin: 40px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .box {
+      flex: 1;
+      background: #ffffff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .attendance-header {
+      display: flex;
+      align-items: center;
+      justify-content: center; /* EKLENDİ: Ortalamak için */
+      gap: 10px;
+      margin: 40px;
+      text-align: center; /* Başlık ve açıklama da ortalansın */
+    }
+
+    .attendance-header i {
+      font-size: 28px;
+      color: #6c757d;
+    }
+    .attendance-header h3 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: bold;
+      color: #1a1a1a;
+    }
+    .attendance-header p {
+      margin: 4px 0 0;
+      font-size: 14px;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="title">MSÜ Yabancı Diller Yüksekokulu Öğrenci Yoklama Sistemi</div>
+    <nav class="menu">
+      <a href="/"><i class="fa-solid fa-clipboard-list"></i> Yoklama Al</a>
+      <a href="/query"><i class="fa-solid fa-magnifying-glass"></i> Yoklama Sorgula</a>
+      <a href="/student-query"><i class="fa-solid fa-user-check"></i> Devamsızlık Sorgula</a>
+    </nav>
+  </header>
+
+  <div class="form-row">
+    <div class="input-card">
+      <label for="classSelect"><i class="fa-solid fa-school"></i> Sınıf</label>
+      <select id="classSelect"></select>
+    </div>
+    <div class="input-card">
+      <label for="dateInput"><i class="fa-solid fa-calendar-day"></i> Tarih</label>
+      <input type="date" id="dateInput">
+    </div>
+    <div class="input-card">
+      <label for="lessonHour"><i class="fa-solid fa-clock"></i> Ders Saati</label>
+      <select id="lessonHour">
+        <option value="1. Ders">1. Ders</option>
+        <option value="2. Ders">2. Ders</option>
+        <option value="3. Ders">3. Ders</option>
+        <option value="4. Ders">4. Ders</option>
+        <option value="5. Ders">5. Ders</option>
+        <option value="6. Ders">6. Ders</option>
+        <option value="7. Ders">7. Ders</option>
+        <option value="8. Ders">8. Ders</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="attendance-header" style="justify-content: center; text-align: center;">
+    <i class="fa-solid fa-user-xmark"></i>
+    <div>
+      <h3>Yoklama Listesi</h3>
+     
+    </div>
+  </div>
+  
+
+  <div class="student-list" id="studentList">Öğrenciler yükleniyor...</div>
+
+  <button id="submitBtn">Yoklamayı Kaydet</button>
+
+  <script>
+    async function fetchClasses() {
+      const res = await fetch("/classes");
+      const classes = await res.json();
+      const classSelect = document.getElementById("classSelect");
+      classSelect.innerHTML = classes.map(c => `<option value="${c}">${c}</option>`).join("");
+      classSelect.addEventListener("change", fetchStudents);
+      fetchStudents();
+    }
+
+    async function fetchStudents() {
+      const className = document.getElementById("classSelect").value;
+      const res = await fetch(`/students?class=${className}`);
+      const students = await res.json();
+      const container = document.getElementById("studentList");
+
+      let html = "";
+      for (let i = 0; i < students.length; i += 4) {
+        html += "<div class='row'>";
+        for (let j = 0; j < 4 && i + j < students.length; j++) {
+          const s = students[i + j];
+          html += `<label class="box"><input type="checkbox" value="${s.id}"> ${s.student_no} - ${s.first_name} ${s.last_name}</label>`;
+        }
+        html += "</div>";
+      }
+      container.innerHTML = html;
+    }
+
+    document.getElementById("submitBtn").addEventListener("click", async () => {
+      const date = document.getElementById("dateInput").value;
+      const hour = document.getElementById("lessonHour").value;
+      const className = document.getElementById("classSelect").value;
+      const absentees = Array.from(document.querySelectorAll(".student-list input:checked"))
+                            .map(input => input.value);
+
+      if (!date) return alert("Lütfen tarih seçin.");
+
+      const res = await fetch("/attendance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, lesson_hour: hour, class_name: className, absentees })
+      });
+
+      const result = await res.json();
+      if (result.success) alert("Yoklama kaydedildi.");
+      else alert(result.message || "Bir hata oluştu.");
+    });
+
+    fetchClasses();
+  </script>
+</body>
+</html>
